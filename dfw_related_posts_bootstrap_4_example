@@ -6,7 +6,12 @@
 <?php
 add_filter('the_content', 'related_posts');
 function related_posts($content){
-		return $content . dfw_related_posts("tag");
+// hide from API
+			if( ! defined('REST_REQUEST') ) {
+				$content = $content . $this->dfw_related_posts("tag");;
+			}
+
+			return $content;
 }	
 
 	/**
