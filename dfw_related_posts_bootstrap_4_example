@@ -1,0 +1,111 @@
+<style>
+#related-post { margin: 18px auto; padding: 18px auto;}
+#related-post-content { overflow: auto; }
+</style>
+
+<?php
+add_filter('the_content', 'related_posts');
+function related_posts($content){
+		return $content . dfw_related_posts("tag");
+}	
+
+	/**
+	 * Related Posts.
+	 *
+	 * Usage:
+	 * To show related by categories:
+	 * Add in single.php <?php dfw_related_posts(); ?>.
+	 * To show related by tags:
+	 * Add in single.php <?php dfw_related_posts('tag'); ?>.
+	 *
+	 * @global array $post
+	 *   WP global post.
+	 * @param string $display
+	 *   Set category or tag.
+	 * @param int $qty
+	 *   Number of posts to be displayed.
+	 * @param bool $images
+	 *   Enable or disable displaying images.
+	 * @param string $title
+	 *   Set the widget title.
+	 */
+	function dfw_related_posts($display = 'category', $qty = 5, $images = true, $title = 'Might be related') {
+		global $post;
+	
+		$show = false;
+		$post_qty = (int) $qty;
+		$content = "";
+		switch ($display) :
+			case 'tag':
+				$tags = wp_get_post_tags($post->ID);
+	
+				if ($tags) {
+					$show = true;
+					$tag_ids = array();
+					foreach ($tags as $individual_tag) {
+						$tag_ids[] = $individual_tag->term_id;
+					}
+	
+					$args = array(
+						'tag__in' => $tag_ids,
+						'post__not_in' => array($post->ID),
+						'posts_per_page' => $post_qty,
+						'ignore_sticky_posts' => 1
+					);
+				}
+				break;
+	
+			default :
+				$categories = get_the_category($post->ID);
+	
+				if ($categories) {
+					$show = true;
+					$category_ids = array();
+					foreach ($categories as $individual_category) {
+						$category_ids[] = $individual_category->term_id;
+					}
+	
+					$args = array(
+						'category__in' => $category_ids,
+						'post__not_in' => array($post->ID),
+						'showposts' => $post_qty,
+						'ignore_sticky_posts' => 1
+					);
+				}
+		endswitch;
+	
+		if ($show == true) {
+			$related = new wp_query($args);
+			if ($related->have_posts()) {
+				$layout = '<div id="related-post">';
+				$layout .= '<h3>' . strip_tags($title) . '</h3>';
+				$layout .= '<div id="related-post-content"><div class="container-fluid"><div class="row flex-row flex-nowrap">';
+	
+				while ($related->have_posts()) {
+					$related->the_post();
+	
+					$layout .= '<div class="col-4"><div class="card card-block">';
+					$layout .= '<span class="text">';
+					$layout .= '<a href="' . get_permalink() . '" title="' . get_the_title() . '">' . get_the_title() . '</a>';
+					$layout .= '</span>';
+					if ($images == true) {
+						$layout .= '<span class="thumb">';
+						$layout .= '<a href="' . get_permalink() . '" title="' . get_the_title() . '">' . get_the_post_thumbnail() . '</a>';
+						$layout .= '</span>';
+					}	
+					$layout .= '</div></div>';
+				}
+	
+				$layout .= '</div></div></div>';
+				$layout .= '</div>';
+	
+				// echo $layout;
+				$content = $layout;
+			}
+			wp_reset_query();
+		}
+		return $content;
+	}
+
+
+?>
