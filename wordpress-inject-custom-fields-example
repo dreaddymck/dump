@@ -1,0 +1,20 @@
+
+<span id="my-custom-post-field-1"></span>
+
+<?php
+
+add_filter('widget_text', 'mycustompostthing',10,3);
+
+
+    function mycustompostthing( $text,$inst,$args ) {
+        global $post;
+        if( strpos($text, 'my-custom-post-field-1')){
+            $upsell = $this->get_upsell ( $post, 'my-custom-post-field-1' );
+            if($upsell){
+                $text = $upsell .'<div class="newline"></div>'. $text;
+            }          
+        }
+        return $text;
+    }
+
+?>
